@@ -24,6 +24,23 @@ static void testbytes(unsigned char *buf, int len, utf8proc_ssize_t retval, int 
     }
 }
 
+void testunicode(char *test) {
+    printf("%s %d\n", test, strlen(test));
+    char *pos = test;
+    int len = strlen(test);
+    char *epos = pos+len;
+    while (pos < epos) {
+        utf8proc_int32_t cp;
+        int size = utf8proc_iterate((unsigned char *)pos, -1, &cp);
+        if (size>0){
+            printf("%c %d %d %d\n", pos[0], cp,utf8proc_tolower(cp), utf8proc_category(cp));
+            pos += size;
+        } else {
+            pos++;
+        }
+    }
+}
+
 int main(int argc, char **argv)
 {
     uint32_t byt;
@@ -155,6 +172,9 @@ int main(int argc, char **argv)
 
      check(!error, "utf8proc_iterate FAILED %d tests out of %d", error, tests);
      printf("utf8proc_iterate tests SUCCEEDED, (%d) tests passed.\n", tests);
+     testunicode("Tthis is SO 256.23 #amazing what-is ab:bc cool");
+     testunicode("会中文的人不一定是中国人");
+     testunicode("lieber Zzeichenzähler");
 
      return 0;
 }
