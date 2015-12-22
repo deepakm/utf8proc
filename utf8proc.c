@@ -357,10 +357,10 @@ UTF8PROC_DLLEXPORT utf8proc_ssize_t utf8proc_decompose_char(utf8proc_int32_t uc,
       category == UTF8PROC_CATEGORY_ME) return 0;
   }
   if (options & UTF8PROC_CASEFOLD) {
-    if (property->casefold_mapping) {
+    if (property->casefold_mapping != UINT16_MAX) {
       const utf8proc_int32_t *casefold_entry;
       utf8proc_ssize_t written = 0;
-      for (casefold_entry = property->casefold_mapping;
+      for (casefold_entry = &utf8proc_sequences[property->casefold_mapping];
           *casefold_entry >= 0; casefold_entry++) {
         written += utf8proc_decompose_char(*casefold_entry, dst+written,
           (bufsize > written) ? (bufsize - written) : 0, options,
@@ -371,11 +371,11 @@ UTF8PROC_DLLEXPORT utf8proc_ssize_t utf8proc_decompose_char(utf8proc_int32_t uc,
     }
   }
   if (options & (UTF8PROC_COMPOSE|UTF8PROC_DECOMPOSE)) {
-    if (property->decomp_mapping &&
+    if (property->decomp_mapping != UINT16_MAX &&
         (!property->decomp_type || (options & UTF8PROC_COMPAT))) {
       const utf8proc_int32_t *decomp_entry;
       utf8proc_ssize_t written = 0;
-      for (decomp_entry = property->decomp_mapping;
+      for (decomp_entry = &utf8proc_sequences[property->decomp_mapping];
           *decomp_entry >= 0; decomp_entry++) {
         written += utf8proc_decompose_char(*decomp_entry, dst+written,
           (bufsize > written) ? (bufsize - written) : 0, options,
@@ -436,7 +436,8 @@ UTF8PROC_DLLEXPORT utf8proc_ssize_t utf8proc_decompose(
       if (decomp_result < 0) return decomp_result;
       wpos += decomp_result;
       /* prohibiting integer overflows due to too long strings: */
-      if (wpos < 0 || wpos > SSIZE_MAX/sizeof(utf8proc_int32_t)/2)
+      if (wpos < 0 ||
+          wpos > (utf8proc_ssize_t)(SSIZE_MAX/sizeof(utf8proc_int32_t)/2))
         return UTF8PROC_ERROR_OVERFLOW;
     }
   }
